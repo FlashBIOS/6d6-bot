@@ -56,8 +56,6 @@ type (
 
 var (
 	regex        *regexp.Regexp
-	GoodDie      = Die{Sides: 6, SuccessfulSides: 2} // Represents Skilled and Lucky.
-	PoorDie      = Die{Sides: 6, SuccessfulSides: 1} // Represents Unskilled and Unlucky.
 	SkilledDie   = Die{Sides: 6, SuccessfulSides: 2, Kind: Skilled}
 	UnskilledDie = Die{Sides: 6, SuccessfulSides: 1, Kind: Unskilled}
 	LuckyDie     = Die{Sides: 6, SuccessfulSides: 2, Kind: Lucky}
