@@ -1,6 +1,7 @@
 package dice
 
 import (
+	"math/rand"
 	"reflect"
 	"testing"
 )
@@ -16,9 +17,9 @@ func TestParse(t *testing.T) {
 			"Test 3s3l",
 			"3s3l",
 			Pool{
-				Skilled:   []Die{GoodDie, GoodDie, GoodDie},
+				Skilled:   []Die{SkilledDie, SkilledDie, SkilledDie},
 				Unskilled: []Die{},
-				Lucky:     []Die{GoodDie, GoodDie, GoodDie},
+				Lucky:     []Die{LuckyDie, LuckyDie, LuckyDie},
 				Unlucky:   []Die{},
 			},
 			false,
@@ -27,10 +28,10 @@ func TestParse(t *testing.T) {
 			"Test 3s1l",
 			"3s1l",
 			Pool{
-				Skilled:   []Die{GoodDie, GoodDie, GoodDie},
+				Skilled:   []Die{SkilledDie, SkilledDie, SkilledDie},
 				Unskilled: []Die{},
-				Lucky:     []Die{GoodDie},
-				Unlucky:   []Die{PoorDie, PoorDie},
+				Lucky:     []Die{LuckyDie},
+				Unlucky:   []Die{UnluckyDie, UnluckyDie},
 			},
 			false,
 		},
@@ -38,9 +39,9 @@ func TestParse(t *testing.T) {
 			"Test 1s3l",
 			"1s3l",
 			Pool{
-				Skilled:   []Die{GoodDie},
-				Unskilled: []Die{PoorDie, PoorDie},
-				Lucky:     []Die{GoodDie, GoodDie, GoodDie},
+				Skilled:   []Die{SkilledDie},
+				Unskilled: []Die{UnskilledDie, UnskilledDie},
+				Lucky:     []Die{LuckyDie, LuckyDie, LuckyDie},
 				Unlucky:   []Die{},
 			},
 			false,
@@ -69,30 +70,93 @@ func TestRoll(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			"Roll",
-			1,
+			"Roll 1",
+			0,
 			Pool{
-				Skilled:   []Die{GoodDie, GoodDie, GoodDie},
-				Unskilled: []Die{PoorDie, PoorDie, PoorDie},
-				Lucky:     []Die{GoodDie, GoodDie, GoodDie},
-				Unlucky:   []Die{PoorDie, PoorDie, PoorDie},
+				Skilled:   []Die{SkilledDie},
+				Unskilled: []Die{UnskilledDie, UnskilledDie},
+				Lucky:     []Die{LuckyDie},
+				Unlucky:   []Die{UnluckyDie, UnluckyDie},
 			},
 			Results{
 				Skill: []Result{
-					{0, false, Die{}},
-					{0, false, Die{}},
-					{0, false, Die{}},
-					{0, false, Die{}},
-					{0, false, Die{}},
-					{0, false, Die{}},
+					{1, false, SkilledDie},
+					{1, false, UnskilledDie},
+					{2, false, UnskilledDie},
 				},
 				Luck: []Result{
-					{0, false, Die{}},
-					{0, false, Die{}},
-					{0, false, Die{}},
-					{0, false, Die{}},
-					{0, false, Die{}},
-					{0, false, Die{}},
+					{5, true, LuckyDie},
+					{6, true, UnluckyDie},
+					{5, true, UnluckyDie},
+				},
+			},
+			false,
+		},
+		{
+			"Roll 2",
+			1,
+			Pool{
+				Skilled:   []Die{SkilledDie},
+				Unskilled: []Die{UnskilledDie, UnskilledDie},
+				Lucky:     []Die{LuckyDie},
+				Unlucky:   []Die{UnluckyDie, UnluckyDie},
+			},
+			Results{
+				Skill: []Result{
+					{6, true, SkilledDie},
+					{4, false, UnskilledDie},
+					{6, true, UnskilledDie},
+				},
+				Luck: []Result{
+					{6, true, LuckyDie},
+					{2, false, UnluckyDie},
+					{1, false, UnluckyDie},
+				},
+			},
+			false,
+		},
+		{
+			"Roll 3",
+			2,
+			Pool{
+				Skilled:   []Die{SkilledDie},
+				Unskilled: []Die{UnskilledDie, UnskilledDie},
+				Lucky:     []Die{LuckyDie},
+				Unlucky:   []Die{UnluckyDie, UnluckyDie},
+			},
+			Results{
+				Skill: []Result{
+					{5, true, SkilledDie},
+					{1, false, UnskilledDie},
+					{1, false, UnskilledDie},
+				},
+				Luck: []Result{
+					{3, true, LuckyDie},
+					{3, false, UnluckyDie},
+					{3, false, UnluckyDie},
+				},
+			},
+			false,
+		},
+		{
+			"Roll 4",
+			4,
+			Pool{
+				Skilled:   []Die{SkilledDie},
+				Unskilled: []Die{UnskilledDie, UnskilledDie},
+				Lucky:     []Die{LuckyDie},
+				Unlucky:   []Die{UnluckyDie, UnluckyDie},
+			},
+			Results{
+				Skill: []Result{
+					{2, false, SkilledDie},
+					{5, true, UnskilledDie},
+					{2, false, UnskilledDie},
+				},
+				Luck: []Result{
+					{6, true, LuckyDie},
+					{4, false, UnluckyDie},
+					{2, false, UnluckyDie},
 				},
 			},
 			false,
@@ -101,11 +165,11 @@ func TestRoll(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			RandSource = 0
+			roller = rand.New(rand.NewSource(tt.source))
 			got := Roll(tt.pool)
 
-			if reflect.TypeOf(got) != reflect.TypeOf(tt.want) {
-				t.Errorf("Roll() = %v, want: %v", reflect.TypeOf(got), reflect.TypeOf(tt.want))
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Roll() = %v, want: %v", got, tt.want)
 			}
 		})
 	}
@@ -146,7 +210,7 @@ func TestResults_String(t *testing.T) {
 					},
 				},
 			},
-			"Skill Successes 1 (rolled 5G 3R); Luck Successes 1 (rolled 6W 4B)",
+			"**Skill Successes:** **1**\n5 \U0001F7E9   3 \U0001F7E5\n**Luck Successes:** **1**\n6 ⬜   4 ⬛",
 			false,
 		},
 	}

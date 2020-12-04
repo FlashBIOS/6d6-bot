@@ -56,18 +56,17 @@ type (
 
 var (
 	regex        *regexp.Regexp
-	SkilledDie   = Die{Sides: 6, SuccessfulSides: 2, Kind: Skilled}
-	UnskilledDie = Die{Sides: 6, SuccessfulSides: 1, Kind: Unskilled}
-	LuckyDie     = Die{Sides: 6, SuccessfulSides: 2, Kind: Lucky}
-	UnluckyDie   = Die{Sides: 6, SuccessfulSides: 1, Kind: Unlucky}
-	RandSource   = time.Now().UnixNano()
+	SkilledDie   = Die{Sides: 6, SuccessfulSides: 4, Kind: Skilled}
+	UnskilledDie = Die{Sides: 6, SuccessfulSides: 2, Kind: Unskilled}
+	LuckyDie     = Die{Sides: 6, SuccessfulSides: 4, Kind: Lucky}
+	UnluckyDie   = Die{Sides: 6, SuccessfulSides: 2, Kind: Unlucky}
+	RandSource   = rand.NewSource(time.Now().UnixNano())
 	roller       *rand.Rand
 )
 
 func init() {
 	regex = regexp.MustCompile(`((?P<skilledcount>\d)s)((?P<luckycount>\d)l)`)
-	source := rand.NewSource(RandSource)
-	roller = rand.New(source)
+	roller = rand.New(RandSource)
 }
 
 func Parse(diceString string) (Pool, error) {
